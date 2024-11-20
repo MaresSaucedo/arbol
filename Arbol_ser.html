@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Árbol de Problemas y Objetivos - Marco Lógico</title>
+    <script src="https://unpkg.com/xlsx@0.15.1/dist/xlsx.full.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+            background-color: #f4f4f4;
+        }
+        h1, h2 {
+            color: #333;
+            text-align: center;
+        }
+        #arbolContainer {
+            background-color: white;
+            border-radius: 5px;
+            padding: 20px;
+            margin-top: 20px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        button {
+            display: inline-block;
+            margin: 10px;
+            padding: 10px 20px;
+            font-size: 16px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        .nodo {
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 3px;
+            display: flex;
+            align-items: center;
+        }
+        .problema { background-color: #ffcccb; }
+        .causa { background-color: #ffd700; }
+        .efecto { background-color: #98fb98; }
+        .nodo input {
+            margin-left: 10px;
+            padding: 5px;
+            flex-grow: 1;
+        }
+        .nodo span {
+            min-width: 150px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Árbol de Problemas y Objetivos - Marco Lógico</h1>
+    <div>
+        <button id="capturarBtn">Capturar Árbol</button>
+        <button id="guardarBtn">Guardar Árbol</button>
+        <button id="cargarBtn">Cargar Árbol</button>
+        <button id="exportarExcelBtn">Exportar a Excel</button>
+    </div>
+    <div id="arbolContainer"></div>
+
+    <script>
+        // Aquí va todo el código JavaScript que teníamos antes
+        // (Clases Nodo, ArbolProblemas, y todas las funciones)
+        // ...
+
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('capturarBtn').addEventListener('click', iniciarCaptura);
+            document.getElementById('guardarBtn').addEventListener('click', guardarArbol);
+            document.getElementById('cargarBtn').addEventListener('click', cargarArboles);
+            document.getElementById('exportarExcelBtn').addEventListener('click', exportarArbolAExcel);
+
+            try {
+                const arbolesGuardadosJSON = localStorage.getItem('arbolesProblemas');
+                if (arbolesGuardadosJSON) {
+                    const arbolesObj = JSON.parse(arbolesGuardadosJSON);
+                    arbolesGuardados = {};
+                    for (const [nombre, arbolObj] of Object.entries(arbolesObj)) {
+                        arbolesGuardados[nombre] = ArbolProblemas.desdeObjeto(arbolObj);
+                    }
+                }
+            } catch (error) {
+                console.error("Error al cargar los árboles:", error);
+                alert("Hubo un error al cargar los árboles guardados. Los árboles anteriores pueden no estar disponibles.");
+            }
+        });
+
+        function mostrarArbolesGuardados() {
+            console.log("Árboles guardados actualmente:", arbolesGuardados);
+            alert("Revisa la consola para ver los árboles guardados");
+        }
+    </script>
+</body>
+</html>
