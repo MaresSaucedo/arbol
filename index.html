@@ -17,7 +17,7 @@
             color: #333;
             text-align: center;
         }
-        #formularioCaptura {
+        #formularioCaptura, #formularioSoluciones {
             background-color: white;
             border-radius: 5px;
             padding: 20px;
@@ -61,7 +61,7 @@
         .causa { background-color: #ffd700; }
         .efecto { background-color: #98fb98; }
         .objetivo { background-color: #add8e6; }
-        .nodo input, #formularioCaptura input {
+        .nodo input, #formularioCaptura input, #formularioSoluciones input {
             margin: 5px 0;
             padding: 5px;
             width: 100%;
@@ -95,6 +95,12 @@
         <div id="arbolProblemasContainer"></div>
         <div id="arbolObjetivosContainer"></div>
     </div>
+    <div id="formularioSoluciones" style="display:none;">
+        <h2>Captura de Soluciones</h2>
+        <input type="number" id="numSoluciones" placeholder="Número de soluciones" min="1">
+        <button id="capturarSolucionesBtn">Capturar Soluciones</button>
+        <div id="solucionesContainer"></div>
+    </div>
     <div id="mensajeError"></div>
 
     <script>
@@ -112,6 +118,7 @@
             constructor(nombre, raiz = null) {
                 this.nombre = nombre;
                 this.raiz = raiz;
+                this.soluciones = [];
             }
         }
 
@@ -195,6 +202,8 @@
             console.log("Árbol capturado:", arbolActual);
             document.getElementById('formularioCaptura').style.display = 'none';
             mostrarArbolEnHTML(arbolActual);
+            document.getElementById('formularioSoluciones').style.display = 'block';
+            document.getElementById('capturarSolucionesBtn').onclick = capturarSoluciones;
         }
 
         function mostrarArbolEnHTML(arbol) {
@@ -255,6 +264,35 @@
             }
         }
 
+        function capturarSoluciones() {
+            const numSoluciones = parseInt(document.getElementById('numSoluciones').value);
+            if (isNaN(numSoluciones) || numSoluciones < 1) {
+                mostrarError("Por favor, ingrese un número válido de soluciones.");
+                return;
+            }
+
+            const solucionesContainer = document.getElementById('solucionesContainer');
+            solucionesContainer.innerHTML = '';
+            for (let i = 0; i < numSoluciones; i++) {
+                solucionesContainer.innerHTML += `
+                    <input type="text" id="solucion-${i}" placeholder="Solución ${i + 1}">
+                `;
+            }
+            solucionesContainer.innerHTML += '<button onclick="guardarSoluciones()">Guardar Soluciones</button>';
+        }
+
+        function guardarSoluciones() {
+            arbolActual.soluciones = [];
+            const inputs = document.querySelectorAll('#solucionesContainer input[type="text"]');
+            inputs.forEach(input => {
+                if (input.value.trim() !== '') {
+                    arbolActual.soluciones.push(input.value.trim());
+                }
+            });
+            console.log("Soluciones guardadas:", arbolActual.soluciones);
+            mostrarError("Soluciones guardadas exitosamente.");
+        }
+
         function exportarArborAExcel() {
             if (!arbolActual) {
                 mostrarError('No hay árboles para exportar. Capture uno primero.');
@@ -274,6 +312,14 @@
                 }
             }
             agregarNodoAData(arbolActual.raiz, 0);
+
+            // Agregar soluciones al final
+            data.push([]);  // Fila vacía para separar
+            data.push(['Soluciones']);
+            arbolActual.soluciones.forEach((solucion, index) => {
+                data.push([`Solución ${index + 1}`, solucion]);
+            });
+
             const ws = XLSX.utils.aoa_to_sheet(data);
             XLSX.utils.book_append_sheet(wb, ws, arbolActual.nombre);
             XLSX.writeFile(wb, 'Arbor_de_Problemas_y_Objetivos.xlsx');
