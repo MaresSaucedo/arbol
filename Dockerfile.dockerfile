@@ -11,7 +11,7 @@ COPY package*.json ./
 RUN npm install
 
 # Copia el resto de los archivos de la aplicación
-COPY arbolProblemas.html
+COPY ArbolProblemas.html
 
 # Expone el puerto en el que se ejecutará la aplicación
 EXPOSE 3000
