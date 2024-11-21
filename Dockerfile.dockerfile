@@ -17,4 +17,4 @@ COPY ArbolProblemas.html
 EXPOSE 3000
 
 # Comando para ejecutar la aplicación
-CMD ["node", "arbolProblemas.js"]
+CMD ["node", "ArbolProblemas.js"]
