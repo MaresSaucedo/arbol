@@ -1,17 +1,8 @@
-# Usa una imagen base de Node.js
-FROM node:14-alpine
+# Usa una imagen base de nginx para servir archivos estáticos
+FROM nginx:alpine
 
-# Establece el directorio de trabajo en el contenedor
-WORKDIR /usr/src/app
+# Copia tu archivo HTML al directorio de contenido de nginx
+COPY index.html /usr/share/nginx/html/index.html
 
-# Copia los archivos de dependencias
-COPY package*.json ./
-
-# Instala las dependencias
-RUN npm install
-
-# Copia el resto de los archivos de la aplicación
-COPY . .
-
-# Expone el puerto en el que se ejecutará la aplicación
-EXPOSE 3000
+# Exponer el puerto 80 para el tráfico HTTP
+EXPOSE 80
