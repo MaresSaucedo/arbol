@@ -192,102 +192,114 @@
 
         function guardarArbolEnLocalStorage(arbol) {
             arbolesGuardados[arbol.nombre] = arbol;
-            try {
-                const arbolesJSON = JSON.stringify(arbolesGuardados);
-                localStorage.setItem('arbolesProblemas', arbolesJSON);
-                console.log("Árboles guardados correctamente");
-            } catch (error) {
-                console.error("Error al guardar los árboles:", error);
-                alert("Hubo un error al guardar los árboles. Por favor, inténtelo de nuevo.");
-            }
-        }
+            
+			try {
+				const arbolesJSON=JSON.stringify(arboresGuardados)
+				localStorage.setItem('arboresProblemas',arboresJSON)
+				console.log('Árbores guardados correctamente')
+			}catch(error){
+				console.error('Error al guardar los árboles:',error)
+				alert(
+					'Hubo un error al guardar los árboles. Por favor, inténtelo de nuevo.'
+				);
+			};
+		};
 
-        function guardarArbol() {
-            if (Object.keys(arbolesGuardados).length > 0) {
-                guardarArbolEnLocalStorage(arbolesGuardados);
-                alert("Árboles guardados correctamente");
-            } else {
-                alert("No hay árboles para guardar. Capture uno primero.");
-            }
-        }
+		function guardarArbo(){
+			if(Object.keys(arboresGuardados).length>0){
+				guardarArboEnLocalStorage(arboresGuardados)
+				alert(
+					'Árbores guardados correctamente'
+				);
+			}else{
+				alert(
+					'No hay árboles para guardar. Capture uno primero.'
+				);
+			};
+		};
 
-        function cargarArboles() {
-            try {
-                const arbolesGuardadosJSON = localStorage.getItem('arbolesProblemas');
-                if (arbolesGuardadosJSON) {
-                    const arbolesObj = JSON.parse(arbolesGuardadosJSON);
-                    arbolesGuardados = {};
-                    for (const [nombre, arbolObj] of Object.entries(arbolesObj)) {
-                        arbolesGuardados[nombre] = ArbolProblemas.desdeObjeto(arbolObj);
-                    }
-                    const nombreArboles = Object.keys(arbolesGuardados);
-                    if (nombreArboles.length > 0) {
-                        const nombreSeleccionado = prompt(`Seleccione un árbol para cargar:\n${nombreArboles.join(', ')}`);
-                        if (nombreSeleccionado && arbolesGuardados[nombreSeleccionado]) {
-                            mostrarArbolEnHTML(arbolesGuardados[nombreSeleccionado]);
-                            alert(`Árbol "${nombreSeleccionado}" cargado correctamente`);
-                        } else {
-                            alert("Nombre de árbol no válido");
-                        }
-                    } else {
-                        alert("No hay árboles guardados para cargar");
-                    }
-                } else {
-                    alert("No hay árboles guardados para cargar");
-                }
-            } catch (error) {
-                console.error("Error al cargar los árboles:", error);
-                alert("Hubo un error al cargar los árboles. Por favor, inténtelo de nuevo.");
-            }
-        }
+		function cargarArbores(){
+			try{
+				const arboresGuardadosJSON=localStorage.getItem('arboresProblemas');
+				if(arboresGuardadosJSON){
+					const arboresObj=JSON.parse(arboresGuardadosJSON)
+					arboresGuardados={};
+					for(const[nombre,arboresObj]of Object.entries(arboresObj)){
+						arboresGuardados[nombre]=ArboresProblemas.desdeObjeto(arboresObj)
+					};
+					const nombreArbores=Object.keys(arboresGuardados)
+					if(nombreArbores.length>0){
+						const nombreSeleccionado=prompt(`Seleccione un árbol para cargar:\n${nombreArbores.join(', ')}`);
+						if(nombreSeleccionado&&arboresGuardados[nombreSeleccionado]){
+							mostrarArborEnHTML(arboresGuardados[nombreSeleccionado])
+							alert(
+								`Árbor "${nombreSeleccionado}" cargado correctamente`
+							);
+						}else{
+							alert(
+								'Nombre de árbol no válido'
+							);
+						};
+					}else{
+						alert(
+							'No hay árboles guardados para cargar'
+						);
+					};
+				}else{
+					alert(
+						'No hay árboles guardados para cargar'
+					);
+				};
+			}catch(error){
+				console.error('Error al cargar los árboles:',error)
+				alert(
+					'Hubo un error al cargar los árboles. Por favor, inténtelo de nuevo.'
+				);
+			};
+		};
 
-        function exportarArbolAExcel() {
-          if (Object.keys(arbolesGuardados).length === 0) {
-              alert("No hay árboles para exportar. Capture uno primero.");
-              return;
-          }
-
-          const wb = XLSX.utils.book_new();
-          
-          for (const [nombre, arbol] of Object.entries(arbolesGuardados)) {
-              const data = [["Tipo", "Contenido", "Objetivo"]];
-              
-              function agregarNodoAData(nodo, nivel) {
+      function exportarArborAExcel(){
+          if(Object.keys(arborGuardados).length===0){
+              alert(
+                  'No hay árboles para exportar. Capture uno primero.'
+              );
+              return
+          };
+          const wb=XLSX.utils.book_new();
+          for(const[nombre,arbor]of Object.entries(arborGuardados)){
+              const data=[['Tipo','Contenido','Objetivo']];
+              function agregarNodoAData(nodo,nivel){
                   data.push([
-                      "  ".repeat(nivel) + nodo.tipo,
+                      ' '.repeat(nivel)+nodo.tipo,
                       nodo.contenido,
-                      nodo.objetivo || ""
+                      nodo.objetivo||''
                   ]);
-                  
-                  for (const hijo of nodo.hijos) {
-                      agregarNodoAData(hijo, nivel + 1);
-                  }
-              }
-              
-              agregarNodoAData(arbol.raiz, 0);
-              
-              const ws = XLSX.utils.aoa_to_sheet(data);
-              XLSX.utils.book_append_sheet(wb, ws, nombre);
-          }
-          
-          XLSX.writeFile(wb, "Arboles_de_Problemas_y_Objetivos.xlsx");
-      }
+                  for(const hijo of nodo.hijos){
+                      agregarNodoAData(hijo,nivel+1)
+                  };
+              };
+              agregarNodoAData(arbor.raiz,0);
+              const ws=XLSX.utils.aoa_to_sheet(data)
+              XLSX.utils.book_append_sheet(wb,ws,nombre)
+          };
+          XLSX.writeFile(wb,'Arbor_de_Problemas_y_Objetivos.xlsx')
+      };
 
-      document.addEventListener('DOMContentLoaded', function() {
+      document.addEventListener('DOMContentLoaded',function(){
 
-          document.getElementById('capturarBtn').addEventListener('click', iniciarCaptura);
-          document.getElementById('guardarBtn').addEventListener('click', guardarArbol);
-          document.getElementById('cargarBtn').addEventListener('click', cargarArboles);
-          document.getElementById('exportarExcelBtn').addEventListener('click', exportarArboAExcel);
+          document.getElementById('capturarBtn').addEventListener('click',iniciarCaptura)
+          document.getElementById('guardarBtn').addEventListener('click',guardarArbor)
+          document.getElementById('cargarBtn').addEventListener('click',cargarArbors)
+          document.getElementById('exportarExcelBtn').addEventListener('click',exportarArborAExcel)
 
-          try {
+          try{
 
-              const arboresGuardadosJSON=localStorage.getItem('arboresProblemas');
-              if(arboresGuardadosJSON){
-                  const arboresObj=JSON.parse(arboresGuardadosJSON)
-                  arboresGuardados={};
-                  for(const[nombre,arboresObj]of Object.entries(arboresObj)){
-                      arboresGuardados[nombre]=ArboresProblemas.desdeObjeto(arboresObj)
+              const arborsGuardadosJSON=localStorage.getItem('arborsProblemas');
+              if(arborsGuardadosJSON){
+                  const arborsObj=JSON.parse(arborsGuardadosJSON)
+                  arborsGuardados={};
+                  for(const[nombre,arborsObj]of Object.entries(arborsObj)){
+                      arborsGuardados[nombre]=ArborsProblemas.desdeObjeto(arborsObj)
                   };
               };
           }catch(error){
@@ -298,9 +310,9 @@
           };
       });
 
-      function mostrarArboresGuardados(){
+      function mostrarArborsGuardados(){
           console.log(
-              'Árbores guardados actualmente:',arboresGuardados
+              'Árbors guardados actualmente:',arborsGuardados
           );
           alert(
               'Revisa la consola para ver los árboles guardados'
