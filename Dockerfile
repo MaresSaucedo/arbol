@@ -11,10 +11,7 @@ COPY package*.json ./
 RUN npm install
 
 # Copia el resto de los archivos de la aplicación
-COPY ArbolProblemas.html
+COPY . .
 
 # Expone el puerto en el que se ejecutará la aplicación
 EXPOSE 3000
-
-# Comando para ejecutar la aplicación
-CMD ["node", "ArbolProblemas.js"]
