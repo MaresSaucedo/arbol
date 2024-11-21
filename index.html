@@ -17,7 +17,19 @@
             color: #333;
             text-align: center;
         }
-        #arbolContainer {
+        #formularioCaptura {
+            background-color: white;
+            border-radius: 5px;
+            padding: 20px;
+            margin-top: 20px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        .container {
+            display: flex;
+            justify-content: space-between;
+        }
+        #arbolProblemasContainer, #arbolObjetivosContainer {
+            width: 48%;
             background-color: white;
             border-radius: 5px;
             padding: 20px;
@@ -48,13 +60,18 @@
         .problema { background-color: #ffcccb; }
         .causa { background-color: #ffd700; }
         .efecto { background-color: #98fb98; }
-        .nodo input {
-            margin-left: 10px;
+        .objetivo { background-color: #add8e6; }
+        .nodo input, #formularioCaptura input {
+            margin: 5px 0;
             padding: 5px;
-            flex-grow: 1;
+            width: 100%;
         }
         .nodo span {
             min-width: 150px;
+        }
+        #mensajeError {
+            color: red;
+            margin-top: 10px;
         }
     </style>
 </head>
@@ -64,15 +81,30 @@
         <button id="capturarBtn">Capturar Árbol</button>
         <button id="exportarExcelBtn">Exportar a Excel</button>
     </div>
-    <div id="arbolContainer"></div>
+    <div id="formularioCaptura" style="display:none;">
+        <h2>Captura de Árbol</h2>
+        <input type="text" id="nombreArbol" placeholder="Nombre del árbol">
+        <input type="text" id="problemaCentral" placeholder="Problema central">
+        <input type="number" id="numCausas" placeholder="Número de causas directas" min="0">
+        <input type="number" id="numEfectos" placeholder="Número de efectos directos" min="0">
+        <button id="siguienteBtn">Siguiente</button>
+        <div id="causasEfectosContainer"></div>
+        <button id="finalizarCapturaBtn" style="display:none;">Finalizar Captura</button>
+    </div>
+    <div class="container">
+        <div id="arbolProblemasContainer"></div>
+        <div id="arbolObjetivosContainer"></div>
+    </div>
+    <div id="mensajeError"></div>
 
     <script>
         class Nodo {
-            constructor(contenido, tipo) {
+            constructor(contenido, tipo, id) {
                 this.contenido = contenido;
                 this.tipo = tipo;
                 this.hijos = [];
                 this.objetivo = '';
+                this.id = id;
             }
         }
 
@@ -81,128 +113,187 @@
                 this.nombre = nombre;
                 this.raiz = raiz;
             }
-
-            capturarArbol() {
-                this.raiz = this.capturarNodo("Problema central", "problema");
-            }
-
-            capturarNodo(tipo, claseTipo) {
-                const contenido = prompt(`Ingrese el ${tipo}:`);
-                if (!contenido) return null;
-
-                const nodo = new Nodo(contenido, claseTipo);
-
-                if (tipo === "Problema central") {
-                    const numCausas = this.obtenerNumeroValido("Ingrese el número de causas directas:");
-                    for (let i = 0; i < numCausas; i++) {
-                        const causa = this.capturarNodo("Causa", "causa");
-                        if (causa) nodo.hijos.push(causa);
-                    }
-
-                    const numEfectos = this.obtenerNumeroValido("Ingrese el número de efectos directos:");
-                    for (let i = 0; i < numEfectos; i++) {
-                        const efecto = this.capturarNodo("Efecto", "efecto");
-                        if (efecto) nodo.hijos.push(efecto);
-                    }
-                } else if (tipo === "Causa" || tipo === "Efecto") {
-                    const tieneSubnodos = confirm(`¿Este ${tipo.toLowerCase()} tiene sub${tipo.toLowerCase()}s?`);
-                    if (tieneSubnodos) {
-                        const numSubnodos = this.obtenerNumeroValido(`Ingrese el número de sub${tipo.toLowerCase()}s:`);
-                        for (let i = 0; i < numSubnodos; i++) {
-                            const subnodo = this.capturarNodo(`Sub${tipo.toLowerCase()}`, claseTipo);
-                            if (subnodo) nodo.hijos.push(subnodo);
-                        }
-                    }
-                }
-
-                return nodo;
-            }
-
-            obtenerNumeroValido(mensaje) {
-                let numero;
-                do {
-                    numero = parseInt(prompt(mensaje));
-                } while (isNaN(numero) || numero < 0);
-                return numero;
-            }
         }
 
         let arbolActual;
+        let nodoActual;
+        let nodosRestantes = [];
+        let contadorId = 0;
 
         function iniciarCaptura() {
-            const nombreArbol = prompt("Ingrese un nombre para este árbol:");
-            if (!nombreArbol) return;
+            console.log("Iniciando captura del árbol");
+            document.getElementById('formularioCaptura').style.display = 'block';
+            document.getElementById('arbolProblemasContainer').innerHTML = '';
+            document.getElementById('arbolObjetivosContainer').innerHTML = '';
+            document.getElementById('siguienteBtn').onclick = capturarProblemaCentral;
+            contadorId = 0;
+        }
+
+        function capturarProblemaCentral() {
+            const nombreArbol = document.getElementById('nombreArbol').value;
+            const problemaCentral = document.getElementById('problemaCentral').value;
+            const numCausas = parseInt(document.getElementById('numCausas').value);
+            const numEfectos = parseInt(document.getElementById('numEfectos').value);
+
+            if (!nombreArbol || !problemaCentral || isNaN(numCausas) || isNaN(numEfectos)) {
+                mostrarError("Por favor, complete todos los campos correctamente.");
+                return;
+            }
 
             arbolActual = new ArbolProblemas(nombreArbol);
-            arbolActual.capturarArbol();
+            arbolActual.raiz = new Nodo(problemaCentral, "problema", contadorId++);
+            nodoActual = arbolActual.raiz;
+
+            for (let i = 0; i < numCausas; i++) {
+                nodosRestantes.push({tipo: "Causa", claseTipo: "causa"});
+            }
+            for (let i = 0; i < numEfectos; i++) {
+                nodosRestantes.push({tipo: "Efecto", claseTipo: "efecto"});
+            }
+
+            mostrarArbolEnHTML(arbolActual);
+            capturarSiguienteNodo();
+        }
+
+        function capturarSiguienteNodo() {
+            if (nodosRestantes.length > 0) {
+                const {tipo, claseTipo} = nodosRestantes.shift();
+                document.getElementById('causasEfectosContainer').innerHTML = `
+                    <input type="text" id="contenidoNodo" placeholder="${tipo}">
+                    <input type="number" id="numSubnodos" placeholder="Número de sub${tipo.toLowerCase()}s" min="0">
+                    <button id="agregarNodoBtn">Agregar ${tipo}</button>
+                `;
+                document.getElementById('agregarNodoBtn').onclick = () => agregarNodo(tipo, claseTipo);
+            } else {
+                document.getElementById('causasEfectosContainer').innerHTML = '';
+                document.getElementById('finalizarCapturaBtn').style.display = 'block';
+                document.getElementById('finalizarCapturaBtn').onclick = finalizarCaptura;
+            }
+        }
+
+        function agregarNodo(tipo, claseTipo) {
+            const contenido = document.getElementById('contenidoNodo').value;
+            const numSubnodos = parseInt(document.getElementById('numSubnodos').value);
+
+            if (!contenido || isNaN(numSubnodos)) {
+                mostrarError("Por favor, complete todos los campos correctamente.");
+                return;
+            }
+
+            const nodo = new Nodo(contenido, claseTipo, contadorId++);
+            nodoActual.hijos.push(nodo);
+
+            for (let i = 0; i < numSubnodos; i++) {
+                nodosRestantes.push({tipo: `Sub${tipo.toLowerCase()}`, claseTipo});
+            }
+
+            mostrarArbolEnHTML(arbolActual);
+            capturarSiguienteNodo();
+        }
+
+        function finalizarCaptura() {
+            console.log("Árbol capturado:", arbolActual);
+            document.getElementById('formularioCaptura').style.display = 'none';
             mostrarArbolEnHTML(arbolActual);
         }
 
         function mostrarArbolEnHTML(arbol) {
-            const container = document.getElementById('arbolContainer');
-            container.innerHTML = `<h2>${arbol.nombre}</h2>`;
+            console.log("Mostrando árbol en HTML:", arbol);
+            const containerProblemas = document.getElementById('arbolProblemasContainer');
+            const containerObjetivos = document.getElementById('arbolObjetivosContainer');
+            containerProblemas.innerHTML = `<h2>Árbol de Problemas: ${arbol.nombre}</h2>`;
+            containerObjetivos.innerHTML = `<h2>Árbol de Objetivos: ${arbol.nombre}</h2>`;
 
-            function crearNodoHTML(nodo, nivel) {
-                if (!nodo) return;
+            function crearNodoHTML(nodo, nivel, esObjetivo) {
+                if (!nodo) return '';
 
-                const div = document.createElement('div');
-                div.className = `nodo ${nodo.tipo}`;
-                div.style.marginLeft = `${nivel * 20}px`;
+                console.log(`Creando nodo HTML ${esObjetivo ? 'objetivo' : 'problema'}:`, nodo.contenido, "Nivel:", nivel);
+
+                let html = `<div class="nodo ${esObjetivo ? 'objetivo' : nodo.tipo}" style="margin-left: ${nivel * 20}px;">`;
                 
-                const span = document.createElement('span');
-                span.textContent = nodo.contenido;
-                div.appendChild(span);
+                if (esObjetivo) {
+                    html += `
+                        <span>${nodo.contenido}</span>
+                        <input type="text" id="objetivo-${nodo.id}" value="${nodo.objetivo || ''}" 
+                               placeholder="Ingrese el objetivo correspondiente"
+                               onchange="actualizarObjetivo(${nodo.id}, this.value)">
+                    `;
+                } else {
+                    html += `<span>${nodo.contenido}</span>`;
+                }
 
-                const input = document.createElement('input');
-                input.type = 'text';
-                input.value = nodo.objetivo || '';
-                input.placeholder = 'Ingrese el objetivo correspondiente';
-                
-				input.addEventListener('input',(e)=>{
-					nodo.objetivo=e.target.value
-				});
-				
-				div.appendChild(input);
+                html += '</div>';
 
-				container.appendChild(div);
+                for (const hijo of nodo.hijos) {
+                    html += crearNodoHTML(hijo, nivel + 1, esObjetivo);
+                }
 
-				for(const hijo of nodo.hijos){
-					crearNodoHTML(hijo,nivel+1)
-				};
-			};
+                return html;
+            }
 
-			crearNodoHTML(arbol.raiz,0)
-		};
+            containerProblemas.innerHTML += crearNodoHTML(arbol.raiz, 0, false);
+            containerObjetivos.innerHTML += crearNodoHTML(arbol.raiz, 0, true);
 
-      function exportarArborAExcel(){
-          if(!arbolActual){
-              alert(
-                  'No hay árboles para exportar. Capture uno primero.'
-              );
-              return
-          };
-          const wb=XLSX.utils.book_new();
-          const data=[['Tipo','Contenido','Objetivo']];
-          function agregarNodoAData(nodo,nivel){
-              data.push([
-                  ' '.repeat(nivel)+nodo.tipo,
-                  nodo.contenido,
-                  nodo.objetivo||''
-              ]);
-              for(const hijo of nodo.hijos){
-                  agregarNodoAData(hijo,nivel+1)
-              };
-          };
-          agregarNodoAData(arbolActual.raiz,0);
-          const ws=XLSX.utils.aoa_to_sheet(data)
-          XLSX.utils.book_append_sheet(wb,ws,arbolActual.nombre)
-          XLSX.writeFile(wb,'Arbor_de_Problemas_y_Objetivos.xlsx')
-      };
+            console.log("Árboles de problemas y objetivos mostrados completamente en HTML");
+        }
 
-      document.addEventListener('DOMContentLoaded',function(){
-          document.getElementById('capturarBtn').addEventListener('click',iniciarCaptura)
-          document.getElementById('exportarExcelBtn').addEventListener('click',exportarArborAExcel)
-      });
+        function actualizarObjetivo(id, nuevoObjetivo) {
+            function actualizarNodo(nodo) {
+                if (nodo.id === id) {
+                    nodo.objetivo = nuevoObjetivo;
+                    return true;
+                }
+                for (const hijo of nodo.hijos) {
+                    if (actualizarNodo(hijo)) return true;
+                }
+                return false;
+            }
+
+            if (actualizarNodo(arbolActual.raiz)) {
+                console.log("Objetivo actualizado para nodo ID:", id, "->", nuevoObjetivo);
+                mostrarArbolEnHTML(arbolActual);
+            }
+        }
+
+        function exportarArborAExcel() {
+            if (!arbolActual) {
+                mostrarError('No hay árboles para exportar. Capture uno primero.');
+                return;
+            }
+            console.log("Iniciando exportación a Excel");
+            const wb = XLSX.utils.book_new();
+            const data = [['Tipo', 'Problema', 'Objetivo']];
+            function agregarNodoAData(nodo, nivel) {
+                data.push([
+                    ' '.repeat(nivel) + nodo.tipo,
+                    nodo.contenido,
+                    nodo.objetivo || ''
+                ]);
+                for (const hijo of nodo.hijos) {
+                    agregarNodoAData(hijo, nivel + 1);
+                }
+            }
+            agregarNodoAData(arbolActual.raiz, 0);
+            const ws = XLSX.utils.aoa_to_sheet(data);
+            XLSX.utils.book_append_sheet(wb, ws, arbolActual.nombre);
+            XLSX.writeFile(wb, 'Arbor_de_Problemas_y_Objetivos.xlsx');
+            console.log("Exportación a Excel completada");
+        }
+
+        function mostrarError(mensaje) {
+            const errorDiv = document.getElementById('mensajeError');
+            errorDiv.textContent = mensaje;
+            errorDiv.style.display = 'block';
+            setTimeout(() => {
+                errorDiv.style.display = 'none';
+            }, 3000);
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log("DOM completamente cargado y analizado");
+            document.getElementById('capturarBtn').addEventListener('click', iniciarCaptura);
+            document.getElementById('exportarExcelBtn').addEventListener('click', exportarArborAExcel);
+        });
     </script>
 </body>
 </html>
